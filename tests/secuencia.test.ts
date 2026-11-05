@@ -73,3 +73,13 @@ e.extendedProperties!.private!.pf_forzar = "liberar";
 assert.deepEqual(etapas(planEvent(e, cfg, T0 + H)), ["liberar", "eliminar", "notif:liberada"]);
 
 console.log("OK: todos los escenarios pasan");
+
+// 10) nombre desde el título de una reserva de Google
+{
+  const ev: CalendarEvent = { id: "e2", summary: "Demo (Ana Pérez)", description: "Teléfono: 3001234567",
+    start: { dateTime: new Date(T0 + 72 * H).toISOString() }, attendees: [{ email: "anaperez@gmail.com" }] };
+  const plan = planEvent(ev, cfg, T0);
+  assert.equal(plan.props!.pf_nombre, "Ana Pérez");
+  assert.ok((plan.acciones[0] as { texto: string }).texto.startsWith("Hola Ana"));
+  console.log("OK: nombre desde el título");
+}

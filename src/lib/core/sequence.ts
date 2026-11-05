@@ -42,6 +42,8 @@ export function extractContact(event: CalendarEvent): { telefono: string; nombre
   }
 
   let nombre = description.match(/(?:nombre|name)\s*:\s*([^\n]+)/i)?.[1]?.trim() ?? "";
+  // Las reservas de Google Calendar se titulan «Agenda (Nombre Apellido)».
+  if (!nombre) nombre = event.summary?.match(/\(([^)]+)\)\s*$/)?.[1]?.trim() ?? "";
   if (!nombre) {
     const invitado = event.attendees?.find((a) => !a.self && !a.organizer);
     nombre = invitado?.displayName ?? invitado?.email?.split("@")[0] ?? "";
