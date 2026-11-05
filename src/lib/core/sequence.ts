@@ -69,7 +69,9 @@ export function normalizeReply(texto: string): "1" | "2" | "3" | null {
 }
 
 export function renderTemplate(tpl: string, vars: Record<string, string>): string {
-  return tpl.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key: string) => vars[key] ?? "");
+  return tpl
+    .replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key: string) => vars[key] ?? "")
+    .replace(/(a\. m\.|p\. m\.)\./g, "$1"); // «a las 9:30 p. m..» → «p. m.»
 }
 
 export function formatFecha(ms: number): string {
