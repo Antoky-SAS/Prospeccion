@@ -51,3 +51,24 @@ export async function fetchEstado(instance: string): Promise<EstadoConexion> {
   const state = data?.instance?.state ?? data?.state;
   return state === "open" || state === "connecting" ? state : "close";
 }
+
+interface MensajeGuardado {
+  key?: { remoteJid?: string; remoteJidAlt?: string };
+}
+
+/**
+ * WhatsApp a veces identifica al remitente solo con un ID interno (`…@lid`).
+ * Evolution guarda el número real en los mensajes que nosotros le enviamos a ese
+ * contacto, así que lo buscamos ahí. Devuelve el jid `57…@s.whatsapp.net` o null.
+ */
+export async function resolverLid(instance: string, lid: string): Promise<string | null> {
+  const res = await evo(`/chat/findMessages/${instance}`, {
+    method: "POST",
+    body: JSON.stringify({ where: { key: { remoteJid: lid } } }),
+  });
+  if (!res.ok) return null;
+  const data = await res.json().catch(() => null);
+  const registros: MensajeGuardado[] = data?.messages?.records ?? data?.records ?? (Array.isArray(data) ? data : []);
+  const alt = registros.map((m) => m.key?.remoteJidAlt).find((j) => j?.endsWith("@s.whatsapp.net"));
+  return alt ?? null;
+}

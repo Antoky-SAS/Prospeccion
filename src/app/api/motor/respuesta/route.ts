@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { procesarRespuesta } from "@/lib/motor";
+import { resolverLid } from "@/lib/evolution";
 import { motorAutorizado, noAutorizado } from "@/lib/motor-auth";
 import { EvolutionUpsertSchema } from "@/schemas/evolution";
 
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
 
   const { instance, data } = parsed.data;
   // WhatsApp puede identificar al remitente con un ID interno (@lid); el número real viene en otro campo.
-  const jid =
+  let jid =
     [data.key.remoteJid, data.key.remoteJidAlt, data.key.senderPn, data.senderPn].find((j) =>
       j?.endsWith("@s.whatsapp.net"),
     ) ?? "";
@@ -25,6 +26,9 @@ export async function POST(request: Request) {
 
   if (data.key.fromMe) return NextResponse.json({ envios: [], ignorado: "mensaje propio" });
   if (data.key.remoteJid.endsWith("@g.us")) return NextResponse.json({ envios: [], ignorado: "grupo" });
+  if (!jid && data.key.remoteJid.endsWith("@lid")) {
+    jid = (await resolverLid(instance, data.key.remoteJid).catch(() => null)) ?? "";
+  }
   if (!jid) return NextResponse.json({ envios: [], ignorado: `sin número real (${data.key.remoteJid})` });
   if (!texto.trim()) return NextResponse.json({ envios: [], ignorado: "sin texto" });
 
