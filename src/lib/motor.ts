@@ -73,17 +73,27 @@ export async function runTick(now = Date.now()): Promise<{ envios: Envio[]; erro
   return { envios, errores };
 }
 
-export async function procesarRespuesta(instance: string, numero: string, texto: string): Promise<Envio[]> {
+/** Devuelve los envíos y, si no hizo nada, el motivo (visible en la ejecución de N8N). */
+export async function procesarRespuesta(
+  instance: string,
+  numero: string,
+  texto: string,
+): Promise<{ envios: Envio[]; ignorado?: string }> {
   const telefono = normalizePhone(numero);
-  if (!telefono) return [];
+  if (!telefono) return { envios: [], ignorado: `número inválido (${numero})` };
 
   const v = (await listVendedoresActivos()).find((x) => x.config.instance === instance);
-  if (!v) return [];
+  if (!v) return { envios: [], ignorado: `ningún vendedor activo con la instancia ${instance}` };
 
   const event = await findReunionByPhone(v.calendarId, telefono);
-  if (!event) return [];
+  if (!event) return { envios: [], ignorado: `sin reunión activa para ${telefono}` };
 
-  return aplicar(v, event, handleReply(event, v.config, texto, Date.now()));
+  const plan = handleReply(event, v.config, texto, Date.now());
+  if (!plan.props) {
+    const estado = event.extendedProperties?.private?.pf_estado;
+    return { envios: [], ignorado: `respuesta no aplica (estado ${estado}, aún sin confirmación enviada o mensaje no válido)` };
+  }
+  return { envios: await aplicar(v, event, plan) };
 }
 
 /** Un envío falló en N8N: la reunión queda en revisión para que el vendedor la vea. */

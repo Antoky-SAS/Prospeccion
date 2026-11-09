@@ -83,3 +83,15 @@ console.log("OK: todos los escenarios pasan");
   assert.ok((plan.acciones[0] as { texto: string }).texto.startsWith("Hola Ana"));
   console.log("OK: nombre desde el título");
 }
+
+// 11) confirmación manual desde la app avisa al prospecto una sola vez
+{
+  let ev = mk(T0 + 72 * H); ev = apply(ev, planEvent(ev, cfg, T0)); ev = apply(ev, planEvent(ev, cfg, T0 + 48 * H));
+  ev.extendedProperties!.private!.pf_estado = "confirmada";
+  ev.extendedProperties!.private!.pf_avisar = "confirmado";
+  const plan = planEvent(ev, cfg, T0 + 49 * H);
+  assert.deepEqual(etapas(plan), ["confirmado_manual"]);
+  assert.equal(plan.props!.pf_avisar, "");
+  assert.equal(planEvent(apply(ev, plan), cfg, T0 + 49 * H).props, null, "no se repite");
+  console.log("OK: confirmación manual avisa al prospecto");
+}

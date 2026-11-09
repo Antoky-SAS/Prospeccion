@@ -6,8 +6,10 @@ export const EvolutionUpsertSchema = z.object({
     key: z.object({
       remoteJid: z.string(),
       remoteJidAlt: z.string().optional(),
+      senderPn: z.string().optional(),
       fromMe: z.boolean().optional(),
     }),
+    senderPn: z.string().optional(),
     message: z
       .object({
         conversation: z.string().optional(),

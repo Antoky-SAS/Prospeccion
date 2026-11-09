@@ -16,7 +16,12 @@ export async function cambiarReunion(eventId: string, cambio: Cambio): Promise<A
     if (!props.pf_estado && cambio !== "liberar") return { ok: false, error: "La reunión aún no fue detectada." };
 
     if (cambio === "confirmar") {
-      Object.assign(props, { pf_estado: "confirmada", pf_motivo: "", pf_confirmado_en: new Date().toISOString() });
+      Object.assign(props, {
+        pf_estado: "confirmada",
+        pf_motivo: "",
+        pf_confirmado_en: new Date().toISOString(),
+        pf_avisar: "confirmado", // el motor le envía al prospecto el texto de «confirmado»
+      });
     } else if (cambio === "reactivar") {
       // Sin teléfono: se reinicia para volver a leer la descripción del evento.
       if (props.pf_motivo === "sin_telefono") props.pf_estado = "";

@@ -23,7 +23,7 @@ export function ReunionAcciones({ eventId, estado }: { eventId: string; estado: 
   return (
     <div className="flex flex-wrap gap-2">
       {estado !== "confirmada" && (
-        <Button size="sm" variant="secondary" disabled={pending} onClick={() => run("confirmar", "Reunión confirmada")}>
+        <Button size="sm" variant="secondary" disabled={pending} onClick={() => run("confirmar", "Reunión confirmada. Se le avisará al prospecto en la próxima corrida.")}>
           Confirmar
         </Button>
       )}

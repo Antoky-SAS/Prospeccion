@@ -251,6 +251,15 @@ export function planEvent(event: CalendarEvent, config: VendedorConfig, now: num
     });
   }
 
+  // Confirmación manual desde la app: se le avisa al prospecto.
+  if (props.pf_avisar === "confirmado") {
+    props.pf_avisar = "";
+    changed = true;
+    if (props.pf_estado === "confirmada") {
+      acciones.push({ tipo: "mensaje", etapa: "confirmado_manual", texto: renderTemplate(config.txtConfirmado, v) });
+    }
+  }
+
   if (estado === "agendada") {
     if (now >= liberarAt) {
       marcar("liberar");
@@ -370,6 +379,7 @@ export function proximaAccion(event: CalendarEvent, config: VendedorConfig): str
   const liberarAt = inicio - config.liberarHoras * HORA;
 
   if (props.pf_forzar === "liberar") return "Liberación en curso (máx. 5 min)";
+  if (props.pf_avisar === "confirmado") return "Avisando la confirmación al prospecto";
   switch (props.pf_estado) {
     case undefined:
     case "":

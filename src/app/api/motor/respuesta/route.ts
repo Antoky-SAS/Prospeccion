@@ -16,13 +16,17 @@ export async function POST(request: Request) {
   if (!parsed.success) return NextResponse.json({ envios: [], ignorado: "payload" });
 
   const { instance, data } = parsed.data;
-  const jid = data.key.remoteJid.endsWith("@lid") ? (data.key.remoteJidAlt ?? "") : data.key.remoteJid;
+  // WhatsApp puede identificar al remitente con un ID interno (@lid); el número real viene en otro campo.
+  const jid =
+    [data.key.remoteJid, data.key.remoteJidAlt, data.key.senderPn, data.senderPn].find((j) =>
+      j?.endsWith("@s.whatsapp.net"),
+    ) ?? "";
   const texto = data.message?.conversation ?? data.message?.extendedTextMessage?.text ?? "";
 
-  if (data.key.fromMe || !jid.endsWith("@s.whatsapp.net") || !texto.trim()) {
-    return NextResponse.json({ envios: [], ignorado: "mensaje" });
-  }
+  if (data.key.fromMe) return NextResponse.json({ envios: [], ignorado: "mensaje propio" });
+  if (data.key.remoteJid.endsWith("@g.us")) return NextResponse.json({ envios: [], ignorado: "grupo" });
+  if (!jid) return NextResponse.json({ envios: [], ignorado: `sin número real (${data.key.remoteJid})` });
+  if (!texto.trim()) return NextResponse.json({ envios: [], ignorado: "sin texto" });
 
-  const envios = await procesarRespuesta(instance, jid.split("@")[0], texto);
-  return NextResponse.json({ envios });
+  return NextResponse.json(await procesarRespuesta(instance, jid.split("@")[0], texto));
 }
